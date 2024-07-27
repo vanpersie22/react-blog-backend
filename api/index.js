@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoute.js';
 import postRoute from './routes/postRoute.js';
 import commentRoute from './routes/commentRoute.js';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 
 dotenv.config();
 
@@ -15,24 +16,34 @@ mongoose.connect(process.env.MONGO)
     console.log('MongoDB connected successfully');
 });
 
-//
+const __dirname = path.resolve();
 
 const app = express();
-const port = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/", (req, res) => res.status(200).send("Hello World"))
-
-// listen
-app.listen(port,() => {
-    console.log(`Listening on http://localhost:${port}`)
-})
+app.listen(3000, () => {
+    console.log('server is running on port 3000');
+});
 
 app.use('/api/user', userRoute);
 app.use('/api/auth', authRoutes);
 app.use('/api/post', postRoute);
 app.use('/api/comment', commentRoute);
 
+app.use(express.static(path.join(__dirname, '/client/dist')));
 
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+});
+
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+    res.status(statusCode).json({ 
+        success: false,
+        statusCode,
+        message,
+    });
+});
